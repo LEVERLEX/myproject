@@ -2,49 +2,42 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>MyProject Autopush Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyProject Dashboard</title>
 <style>
-body { font-family: Arial, sans-serif; padding: 2rem; background: #f5f5f5; }
-h1 { color: #333; }
-section { margin-bottom: 2rem; padding: 1rem; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
-pre { background: #eee; padding: 1rem; border-radius: 5px; overflow-x: auto;}
+body { font-family: sans-serif; margin: 2rem; background: #f4f4f9; color: #333; }
+h1 { color: #2c3e50; }
+pre { background: #ecf0f1; padding: 1rem; border-radius: 5px; overflow-x: auto; }
+section { margin-bottom: 2rem; }
 </style>
 </head>
 <body>
-<h1>MyProject Autopush Dashboard</h1>
+<h1>MyProject Dashboard</h1>
 
 <section>
-<h2>Current Version</h2>
-<pre id="version">Loading...</pre>
+<h2>Version</h2>
+<pre id="version"></pre>
 </section>
 
 <section>
 <h2>Recent Commits</h2>
-<pre id="commits">Loading...</pre>
+<pre id="commits"></pre>
 </section>
 
 <section>
-<h2>Changelog</h2>
-<pre id="changelog">Loading...</pre>
-</section>
-
-<section>
-<h2>Last Push Status</h2>
-<pre id="push">Loading...</pre>
+<h2>Last Push</h2>
+<pre id="last-push"></pre>
 </section>
 
 <script>
 async function loadData() {
-  const version = await fetch('version.txt').then(r => r.text());
-  const commits = await fetch('commits.txt').then(r => r.text());
-  const changelog = await fetch('CHANGELOG.md').then(r => r.text());
-  const push = await fetch('push.log').then(r => r.text());
-  document.getElementById('version').textContent = version;
-  document.getElementById('commits').textContent = commits;
-  document.getElementById('changelog').textContent = changelog;
-  document.getElementById('push').textContent = push;
+    const version = await fetch('version.txt').then(r=>r.text());
+    const commits = await fetch('commits.txt').then(r=>r.text());
+    const lastPush = await fetch('push.log').then(r=>r.text());
+    document.getElementById('version').textContent = version;
+    document.getElementById('commits').textContent = commits;
+    document.getElementById('last-push').textContent = lastPush;
 }
-
 loadData();
 </script>
 </body>
