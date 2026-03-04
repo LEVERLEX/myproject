@@ -61,3 +61,14 @@
 - docs: updated documentation
 - Update: dashboard/commits.txt,
 - feat: add live dashboard
+
+## 2026-03-05 - v1.0.6
+- chore: update dashboard
+- docs: update changelog
+- chore: update dashboard
+- docs: update changelog
+- chore: update dashboard
+- docs: update changelog
+- docs: updated documentation
+- Update: dashboard/commits.txt,
+- feat: add live dashboard
