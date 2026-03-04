@@ -7,3 +7,7 @@
 - Update: README.md,autopush.sh,
 - scripts: updated shell scripts
 - Add GitHub Actions autopush workflow
+
+## 2026-03-05 - v1.0.3
+- Update: autopush.sh,dashboard/index.html,
+- docs: initialize/update changelog
