@@ -11,3 +11,8 @@
 ## 2026-03-05 - v1.0.3
 - Update: autopush.sh,dashboard/index.html,
 - docs: initialize/update changelog
+
+## 2026-03-05 - v1.0.6
+- docs: updated documentation
+- Update: dashboard/commits.txt,
+- feat: add live dashboard
