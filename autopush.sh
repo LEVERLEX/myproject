@@ -1,13 +1,12 @@
-# ===== DETERMINE SMART COMMIT MESSAGE =====
-if git diff --cached --name-only | grep -qE '\.(md|txt)$'; then
-    COMMIT_MSG="docs: updated documentation"
-elif git diff --cached --name-only | grep -qE '\.(sh|bash)$'; then
-    COMMIT_MSG="scripts: updated shell scripts"
-elif git diff --cached --name-only | grep -qE '\.(js|ts|py)$'; then
-    COMMIT_MSG="feat: updated code files"
-else
-    COMMIT_MSG="chore: miscellaneous changes"
-fi
+# ===== AI-STYLE COMMIT SUMMARY =====
+git add .
 
-echo "📝 Committing changes with message: $COMMIT_MSG"
-git commit -m "$COMMIT_MSG"
+# Generate a concise description of changes
+if git diff --cached --name-only | grep -q '.'; then
+    FILES_CHANGED=$(git diff --cached --name-only)
+    COMMIT_MSG="Update: $(echo "$FILES_CHANGED" | tr '\n' ', ' | sed 's/, $//')"
+    echo "📝 Committing changes with message: $COMMIT_MSG"
+    git commit -m "$COMMIT_MSG"
+else
+    echo "✅ No changes detected."
+fi
