@@ -1,85 +1,58 @@
 #!/data/data/com.termux/files/usr/bin/bash
+# ~/myproject/autopush.sh
+# Fully automated Git autopush for MyProject
 
 set -e
 
-REPO="$HOME/myproject"
-DOCS="$REPO/docs"
+# Navigate to project
+cd ~/myproject
 
-cd "$REPO"
+# ===== DETERMINE SMART COMMIT MESSAGE =====
+if git diff --cached --name-only | grep -qE '\.(md|txt)$'; then
+    COMMIT_MSG="docs: update documentation"
+elif git diff --cached --name-only | grep -qE '\.(sh|bash)$'; then
+    COMMIT_MSG="scripts: update shell scripts"
+elif git diff --cached --name-only | grep -qE '\.(js|ts|py|html|css)$'; then
+    COMMIT_MSG="feat: update code/dashboard"
+else
+    COMMIT_MSG="chore: miscellaneous changes"
+fi
 
-# Ensure docs directory exists
-mkdir -p "$DOCS"
-
-# Stage changes
+# ===== AUTO-DETECT CHANGES =====
 git add .
 
-# Commit if needed
+# Only commit if there are changes
 if ! git diff --cached --quiet; then
-    git commit -m "auto: system update $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "📝 Committing changes: $COMMIT_MSG"
+    git commit -m "$COMMIT_MSG"
+
+    # ===== UPDATE VERSION =====
+    if [ ! -f version.txt ]; then
+        echo "v0.1.0" > version.txt
+    fi
+
+    OLD_VERSION=$(cat version.txt)
+    # Increment patch version
+    PATCH=$(echo $OLD_VERSION | awk -F. '{print $3+1}')
+    NEW_VERSION="$(echo $OLD_VERSION | awk -F. '{print $1"."$2}').$PATCH"
+    echo "$NEW_VERSION" > version.txt
+    git add version.txt
+    git commit -m "chore: bump version to $NEW_VERSION"
+
+    # ===== UPDATE COMMITS LOG =====
+    echo "$(date '+%Y-%m-%d %H:%M:%S') | $COMMIT_MSG" >> commits.txt
+    git add commits.txt
+    git commit -m "chore: update commits log"
+
+    # ===== UPDATE PUSH LOG =====
+    echo "Pushed at $(date '+%Y-%m-%d %H:%M:%S')" >> push.log
+    git add push.log
+    git commit -m "chore: update push log"
+
+    # ===== PUSH TO GITHUB =====
+    git push origin main
+    echo "✅ Push completed at $(date '+%Y-%m-%d %H:%M:%S')"
+
+else
+    echo "⚡ No changes detected."
 fi
-
-# Versioning
-LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
-IFS='.' read -r MAJOR MINOR PATCH <<< "${LAST_TAG#v}"
-PATCH=$((PATCH + 1))
-NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
-
-git tag $NEW_TAG 2>/dev/null || true
-
-# Changelog
-CHANGELOG="$REPO/CHANGELOG.md"
-touch "$CHANGELOG"
-
-echo -e "\n## $NEW_TAG - $(date +'%Y-%m-%d')" >> "$CHANGELOG"
-git log $LAST_TAG..HEAD --pretty=format:"- %s" >> "$CHANGELOG" || true
-
-# Dashboard files
-echo "$NEW_TAG" > "$DOCS/version.txt"
-git log -n 10 --pretty=format:"%h - %s (%ar)" > "$DOCS/commits.txt"
-echo "Last deployment: $(date)" > "$DOCS/push.log"
-
-# Ensure index.html exists
-if [ ! -f "$DOCS/index.html" ]; then
-cat > "$DOCS/index.html" <<EOF
-<!DOCTYPE html>
-<html>
-<head>
-<title>Production Dashboard</title>
-<meta http-equiv="refresh" content="60">
-<style>
-body { font-family: Arial; padding: 20px; background: #111; color: #eee; }
-h1 { color: #00ffcc; }
-pre { background: #222; padding: 10px; }
-</style>
-</head>
-<body>
-<h1>Live Production Dashboard</h1>
-<h2>Version</h2>
-<pre id="version"></pre>
-<h2>Recent Commits</h2>
-<pre id="commits"></pre>
-<h2>Status</h2>
-<pre id="status"></pre>
-
-<script>
-async function loadData() {
-  document.getElementById("version").innerText =
-    await fetch("version.txt").then(r => r.text());
-  document.getElementById("commits").innerText =
-    await fetch("commits.txt").then(r => r.text());
-  document.getElementById("status").innerText =
-    await fetch("push.log").then(r => r.text());
-}
-loadData();
-</script>
-</body>
-</html>
-EOF
-fi
-
-git add .
-git commit -m "auto: dashboard sync" || true
-
-git push origin main --tags
-
-echo "PRODUCTION DEPLOYMENT COMPLETE"
