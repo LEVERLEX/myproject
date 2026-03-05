@@ -1,31 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Production Dashboard</title>
-<meta http-equiv="refresh" content="60">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyProject Production Dashboard</title>
+
 <style>
-body { font-family: Arial; padding: 20px; background: #111; color: #eee; }
-h1 { color: #00ffcc; }
-pre { background: #222; padding: 10px; }
+body {
+    font-family: Arial, sans-serif;
+    margin: 2rem;
+    background: #0f172a;
+    color: #e2e8f0;
+}
+h1 { color: #38bdf8; }
+h2 { color: #22c55e; }
+section {
+    margin-bottom: 2rem;
+}
+pre {
+    background: #1e293b;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+.status {
+    padding: 10px;
+    background: #14532d;
+    border-radius: 6px;
+    display: inline-block;
+}
 </style>
+
+<meta http-equiv="refresh" content="60">
+
 </head>
 <body>
-<h1>Live Production Dashboard</h1>
-<h2>Version</h2>
-<pre id="version"></pre>
+
+<h1>🚀 MyProject Production Dashboard</h1>
+
+<div class="status">
+System: LIVE & AUTOMATED
+</div>
+
+<section>
+<h2>Current Version</h2>
+<pre id="version">Loading...</pre>
+</section>
+
+<section>
 <h2>Recent Commits</h2>
-<pre id="commits"></pre>
-<h2>Status</h2>
-<pre id="status"></pre>
+<pre id="commits">Loading...</pre>
+</section>
+
+<section>
+<h2>Last Push Activity</h2>
+<pre id="pushlog">Loading...</pre>
+</section>
+
+<section>
+<h2>Changelog</h2>
+<pre id="changelog">Loading...</pre>
+</section>
 
 <script>
 async function loadData() {
-  document.getElementById("version").innerText =
-    await fetch("version.txt").then(r => r.text());
-  document.getElementById("commits").innerText =
-    await fetch("commits.txt").then(r => r.text());
-  document.getElementById("status").innerText =
-    await fetch("push.log").then(r => r.text());
+    try {
+        const version = await fetch('../version.txt').then(r=>r.text());
+        const commits = await fetch('../commits.txt').then(r=>r.text());
+        const pushlog = await fetch('../push.log').then(r=>r.text());
+        const changelog = await fetch('../CHANGELOG.md').then(r=>r.text());
+
+        document.getElementById('version').textContent = version;
+        document.getElementById('commits').textContent = commits;
+        document.getElementById('pushlog').textContent = pushlog;
+        document.getElementById('changelog').textContent = changelog;
+
+    } catch (error) {
+        console.error("Error loading dashboard data:", error);
+    }
+}
+
+loadData();
+</script>
+
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyProject Dashboard</title>
+<style>
+body { font-family: sans-serif; margin: 2rem; background: #f4f4f9; color: #333; }
+h1 { color: #2c3e50; }
+pre { background: #ecf0f1; padding: 1rem; border-radius: 5px; overflow-x: auto; }
+section { margin-bottom: 2rem; }
+</style>
+</head>
+<body>
+<h1>MyProject Dashboard</h1>
+
+<section>
+<h2>Version</h2>
+<pre id="version"></pre>
+</section>
+
+<section>
+<h2>Recent Commits</h2>
+<pre id="commits"></pre>
+</section>
+
+<section>
+<h2>Last Push</h2>
+<pre id="last-push"></pre>
+</section>
+
+<script>
+async function loadData() {
+    const version = await fetch('version.txt').then(r=>r.text());
+    const commits = await fetch('commits.txt').then(r=>r.text());
+    const lastPush = await fetch('push.log').then(r=>r.text());
+    document.getElementById('version').textContent = version;
+    document.getElementById('commits').textContent = commits;
+    document.getElementById('last-push').textContent = lastPush;
 }
 loadData();
 </script>
