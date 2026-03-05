@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Production Dashboard</title>
+<meta http-equiv="refresh" content="60">
+<style>
+body { font-family: Arial; padding: 20px; background: #111; color: #eee; }
+h1 { color: #00ffcc; }
+pre { background: #222; padding: 10px; }
+</style>
+</head>
+<body>
+<h1>Live Production Dashboard</h1>
+<h2>Version</h2>
+<pre id="version"></pre>
+<h2>Recent Commits</h2>
+<pre id="commits"></pre>
+<h2>Status</h2>
+<pre id="status"></pre>
+
+<script>
+async function loadData() {
+  document.getElementById("version").innerText =
+    await fetch("version.txt").then(r => r.text());
+  document.getElementById("commits").innerText =
+    await fetch("commits.txt").then(r => r.text());
+  document.getElementById("status").innerText =
+    await fetch("push.log").then(r => r.text());
+}
+loadData();
+</script>
+</body>
+</html>
