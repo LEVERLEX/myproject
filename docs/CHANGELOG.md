@@ -2,3 +2,6 @@
 
 ## v0.1.2 - Fri Mar  6 23:25:01 WAT 2026
 - scripts: automation update
+
+## v0.1.3 - Fri Mar  6 23:25:01 WAT 2026
+- scripts: automation update
