@@ -1,58 +1,110 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# ~/myproject/autopush.sh
-# Fully automated Git autopush for MyProject
 
-set -e
+# ==============================
+# MyProject Autopush Engine v2
+# Fully Automated Git System
+# ==============================
 
-# Navigate to project
-cd ~/myproject
+PROJECT_DIR="$HOME/myproject"
+DOCS_DIR="$PROJECT_DIR/docs"
+LOG_DIR="$PROJECT_DIR/logs"
 
-# ===== DETERMINE SMART COMMIT MESSAGE =====
-if git diff --cached --name-only | grep -qE '\.(md|txt)$'; then
-    COMMIT_MSG="docs: update documentation"
-elif git diff --cached --name-only | grep -qE '\.(sh|bash)$'; then
-    COMMIT_MSG="scripts: update shell scripts"
-elif git diff --cached --name-only | grep -qE '\.(js|ts|py|html|css)$'; then
-    COMMIT_MSG="feat: update code/dashboard"
+VERSION_FILE="$DOCS_DIR/version.txt"
+COMMITS_FILE="$DOCS_DIR/commits.txt"
+CHANGELOG_FILE="$DOCS_DIR/CHANGELOG.md"
+PUSH_LOG="$LOG_DIR/push.log"
+
+cd "$PROJECT_DIR" || exit
+
+mkdir -p "$DOCS_DIR"
+mkdir -p "$LOG_DIR"
+
+echo "===== AUTOPUSH RUN $(date) =====" >> "$PUSH_LOG"
+
+# ==============================
+# Detect Changes
+# ==============================
+
+git add .
+
+if git diff --cached --quiet
+then
+    echo "No changes detected." >> "$PUSH_LOG"
+    exit 0
+fi
+
+# ==============================
+# Smart Commit Message
+# ==============================
+
+FILES=$(git diff --cached --name-only)
+
+if echo "$FILES" | grep -qE '\.md$'; then
+    COMMIT_MSG="docs: documentation update"
+elif echo "$FILES" | grep -qE '\.html$'; then
+    COMMIT_MSG="ui: dashboard update"
+elif echo "$FILES" | grep -qE '\.sh$'; then
+    COMMIT_MSG="scripts: automation update"
+elif echo "$FILES" | grep -qE '\.(js|ts|py)$'; then
+    COMMIT_MSG="feat: code improvements"
 else
     COMMIT_MSG="chore: miscellaneous changes"
 fi
 
-# ===== AUTO-DETECT CHANGES =====
-git add .
+echo "Commit message: $COMMIT_MSG" >> "$PUSH_LOG"
 
-# Only commit if there are changes
-if ! git diff --cached --quiet; then
-    echo "📝 Committing changes: $COMMIT_MSG"
-    git commit -m "$COMMIT_MSG"
+git commit -m "$COMMIT_MSG"
 
-    # ===== UPDATE VERSION =====
-    if [ ! -f version.txt ]; then
-        echo "v0.1.0" > version.txt
-    fi
+# ==============================
+# Version System
+# ==============================
 
-    OLD_VERSION=$(cat version.txt)
-    # Increment patch version
-    PATCH=$(echo $OLD_VERSION | awk -F. '{print $3+1}')
-    NEW_VERSION="$(echo $OLD_VERSION | awk -F. '{print $1"."$2}').$PATCH"
-    echo "$NEW_VERSION" > version.txt
-    git add version.txt
-    git commit -m "chore: bump version to $NEW_VERSION"
-
-    # ===== UPDATE COMMITS LOG =====
-    echo "$(date '+%Y-%m-%d %H:%M:%S') | $COMMIT_MSG" >> commits.txt
-    git add commits.txt
-    git commit -m "chore: update commits log"
-
-    # ===== UPDATE PUSH LOG =====
-    echo "Pushed at $(date '+%Y-%m-%d %H:%M:%S')" >> push.log
-    git add push.log
-    git commit -m "chore: update push log"
-
-    # ===== PUSH TO GITHUB =====
-    git push origin main
-    echo "✅ Push completed at $(date '+%Y-%m-%d %H:%M:%S')"
-
-else
-    echo "⚡ No changes detected."
+if [ ! -f "$VERSION_FILE" ]; then
+    echo "v0.1.0" > "$VERSION_FILE"
 fi
+
+CURRENT=$(cat "$VERSION_FILE")
+BASE=${CURRENT%.*}
+PATCH=${CURRENT##*.}
+
+PATCH=$((PATCH+1))
+NEW_VERSION="$BASE.$PATCH"
+
+echo "$NEW_VERSION" > "$VERSION_FILE"
+
+echo "Version bumped to $NEW_VERSION" >> "$PUSH_LOG"
+
+git add "$VERSION_FILE"
+git commit -m "chore: bump version to $NEW_VERSION"
+
+# ==============================
+# Update Commits Log
+# ==============================
+
+git log -n 10 --pretty=format:"%h - %s (%cd)" --date=short > "$COMMITS_FILE"
+
+git add "$COMMITS_FILE"
+git commit -m "chore: update commits log"
+
+# ==============================
+# Update Changelog
+# ==============================
+
+if [ ! -f "$CHANGELOG_FILE" ]; then
+    echo "# Changelog" > "$CHANGELOG_FILE"
+fi
+
+echo "" >> "$CHANGELOG_FILE"
+echo "## $NEW_VERSION - $(date)" >> "$CHANGELOG_FILE"
+echo "- $COMMIT_MSG" >> "$CHANGELOG_FILE"
+
+git add "$CHANGELOG_FILE"
+git commit -m "docs: update changelog"
+
+# ==============================
+# Push to GitHub
+# ==============================
+
+git push origin main >> "$PUSH_LOG" 2>&1
+
+echo "Push completed at $(date)" >> "$PUSH_LOG"
