@@ -11,3 +11,6 @@
 
 ## v0.1.4 - Fri Mar  6 23:30:00 WAT 2026
 - chore: miscellaneous changes
+
+## v0.1.6 - Fri Mar  6 23:34:53 WAT 2026
+- chore: miscellaneous changes
