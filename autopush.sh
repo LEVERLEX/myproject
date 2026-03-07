@@ -1,6 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-cd ~/myproject || exit
+PROJECT_DIR="$HOME/myproject"
+cd "$PROJECT_DIR" || exit
 
 LOCKFILE=".autopush.lock"
 
@@ -13,7 +14,7 @@ fi
 touch "$LOCKFILE"
 trap "rm -f $LOCKFILE" EXIT
 
-echo "-----"
+echo "-----------------------------"
 echo "AUTOPUSH RUN $(date)"
 
 # Remove broken git lock if it exists
@@ -21,9 +22,6 @@ if [ -f ".git/index.lock" ]; then
     echo "Removing stale git lock"
     rm -f .git/index.lock
 fi
-
-# Sync with remote repository
-git pull --rebase origin main
 
 # Detect changes
 if [ -n "$(git status --porcelain)" ]; then
@@ -51,7 +49,7 @@ if [ -n "$(git status --porcelain)" ]; then
 
     git commit -m "$COMMIT_MSG"
 
-    # Version bump
+    # Version system
     if [ ! -f docs/version.txt ]; then
         echo "v0.1.0" > docs/version.txt
     fi
@@ -59,7 +57,6 @@ if [ -n "$(git status --porcelain)" ]; then
     CURRENT=$(cat docs/version.txt)
     BASE=${CURRENT%.*}
     PATCH=${CURRENT##*.}
-
     PATCH=$((PATCH+1))
     NEW_VERSION="$BASE.$PATCH"
 
@@ -68,7 +65,7 @@ if [ -n "$(git status --porcelain)" ]; then
     git add docs/version.txt
     git commit -m "chore: bump version to $NEW_VERSION"
 
-    # Update commits log
+    # Update commit history
     git log -n 10 --pretty=format:"%h - %s (%cd)" --date=short > docs/commits.txt
     git add docs/commits.txt
     git commit -m "chore: update commits log"
@@ -85,7 +82,10 @@ if [ -n "$(git status --porcelain)" ]; then
     git add docs/CHANGELOG.md
     git commit -m "docs: update changelog"
 
-    # Push to GitHub
+    # Sync with remote safely
+    git pull --rebase origin main
+
+    # Push changes
     git push origin main
 
     echo "✅ Push completed $(date)"
