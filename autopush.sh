@@ -11,6 +11,7 @@ if [ -f "$LOCKFILE" ]; then
 fi
 
 touch "$LOCKFILE"
+trap "rm -f $LOCKFILE" EXIT
 
 echo "-----"
 echo "AUTOPUSH RUN $(date)"
@@ -21,7 +22,7 @@ if [ -f ".git/index.lock" ]; then
     rm -f .git/index.lock
 fi
 
-# Sync with remote
+# Sync with remote repository
 git pull --rebase origin main
 
 # Detect changes
@@ -31,51 +32,64 @@ if [ -n "$(git status --porcelain)" ]; then
 
     # Smart commit detection
     if git diff --cached --name-only | grep -qE '\.(md|txt)$'; then
-        COMMIT_MSG="docs: update documentation"
-    elif git diff --cached --name-only | grep -qE '\.(sh|bash)$'; then
+        COMMIT_MSG="docs: documentation update"
+
+    elif git diff --cached --name-only | grep -qE '\.html$'; then
+        COMMIT_MSG="ui: dashboard update"
+
+    elif git diff --cached --name-only | grep -qE '\.sh$'; then
         COMMIT_MSG="scripts: automation update"
-    elif git diff --cached --name-only | grep -qE '\.(js|html|css)$'; then
-        COMMIT_MSG="feat: frontend update"
+
+    elif git diff --cached --name-only | grep -qE '\.(js|ts|py)$'; then
+        COMMIT_MSG="feat: code improvements"
+
     else
         COMMIT_MSG="chore: miscellaneous changes"
     fi
 
-    echo "📝 Committing: $COMMIT_MSG"
+    echo "📝 Committing changes: $COMMIT_MSG"
+
     git commit -m "$COMMIT_MSG"
 
-    # Update version
-    VERSION_FILE="version.txt"
-    if [ ! -f "$VERSION_FILE" ]; then
-        echo "v0.1.0" > "$VERSION_FILE"
+    # Version bump
+    if [ ! -f docs/version.txt ]; then
+        echo "v0.1.0" > docs/version.txt
     fi
 
-    VERSION=$(cat "$VERSION_FILE")
-    NUM=${VERSION#v}
-    MAJOR=$(echo $NUM | cut -d. -f1)
-    MINOR=$(echo $NUM | cut -d. -f2)
-    PATCH=$(echo $NUM | cut -d. -f3)
+    CURRENT=$(cat docs/version.txt)
+    BASE=${CURRENT%.*}
+    PATCH=${CURRENT##*.}
 
-    PATCH=$((PATCH + 1))
+    PATCH=$((PATCH+1))
+    NEW_VERSION="$BASE.$PATCH"
 
-    NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-    echo $NEW_VERSION > $VERSION_FILE
+    echo "$NEW_VERSION" > docs/version.txt
 
-    git add version.txt
+    git add docs/version.txt
     git commit -m "chore: bump version to $NEW_VERSION"
 
-    # Update commit log
-    git log -5 --pretty=format:"%h - %s (%cr)" > commits.txt
-    git add commits.txt
+    # Update commits log
+    git log -n 10 --pretty=format:"%h - %s (%cd)" --date=short > docs/commits.txt
+    git add docs/commits.txt
     git commit -m "chore: update commits log"
 
-    # Push
+    # Update changelog
+    if [ ! -f docs/CHANGELOG.md ]; then
+        echo "# Changelog" > docs/CHANGELOG.md
+    fi
+
+    echo "" >> docs/CHANGELOG.md
+    echo "## $NEW_VERSION - $(date)" >> docs/CHANGELOG.md
+    echo "- $COMMIT_MSG" >> docs/CHANGELOG.md
+
+    git add docs/CHANGELOG.md
+    git commit -m "docs: update changelog"
+
+    # Push to GitHub
     git push origin main
 
-    echo "🚀 Pushed successfully at $(date)"
+    echo "✅ Push completed $(date)"
 
 else
     echo "⚡ No changes detected."
 fi
-
-# Release lock
-rm -f "$LOCKFILE"
