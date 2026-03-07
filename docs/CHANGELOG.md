@@ -17,3 +17,6 @@
 
 ## v0.1.7 - Sat Mar  7 13:52:50 WAT 2026
 - scripts: automation update
+
+## v0.1.8 - Sat Mar  7 14:00:07 WAT 2026
+- scripts: automation update
