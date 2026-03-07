@@ -10,15 +10,50 @@ on:
 jobs:
   autopush:
     runs-on: ubuntu-latest
+
     steps:
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full history needed for git log and tags
 
+      # Setup Git user
       - name: Set up Git
         run: |
           git config --global user.name "LEVERLEX"
           git config --global user.email "cleverlexdigitals@gmail.com"
 
+      # Fetch all tags
+      - name: Fetch all tags
+        run: git fetch --tags
+
+      # Detect changes and update logs/changelog
+      - name: Update commits log and changelog
+        run: |
+          COMMITS_FILE="COMMITS.md"
+          CHANGELOG_FILE="CHANGELOG.md"
+          LOG_ENTRIES=$(git status --porcelain)
+          
+          if [ -n "$LOG_ENTRIES" ]; then
+            echo "Changes detected"
+            git add .
+            git commit -m "auto: system update $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          else
+            echo "No changes detected"
+          fi
+
+          # Update commits log
+          git log --oneline -10 > $COMMITS_FILE
+          git add $COMMITS_FILE
+          git commit -m "chore: update commits log" || echo "No changes to commit"
+
+          # Update changelog
+          echo "Update $(date '+%Y-%m-%d %H:%M:%S')" >> $CHANGELOG_FILE
+          git add $CHANGELOG_FILE
+          git commit -m "docs: update changelog" || echo "No changes to commit"
+
+      # Auto-increment version
       - name: Auto-increment version
         run: |
           VERSION_FILE="VERSION"
@@ -32,5 +67,15 @@ jobs:
           echo "$NEW" > $VERSION_FILE
           git add $VERSION_FILE
           git commit -m "Release v$NEW" || echo "No changes to commit"
+
+          # Tag the release
           git tag "v$NEW" || echo "Tag exists"
+
+      # Push changes to main branch
+      - name: Push changes
+        run: |
           git push origin main --tags || echo "Push failed"
+
+      # Log final status
+      - name: Display final status
+        run: git status
