@@ -1,87 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MyProject Production Dashboard</title>
+<title>MyProject Automation Dashboard</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 2rem;
-    background: #0f172a;
-    color: #e2e8f0;
+body{
+font-family:Arial;
+background:#0f172a;
+color:#e2e8f0;
+margin:40px;
 }
-h1 { color: #38bdf8; }
-h2 { color: #22c55e; }
-section {
-    margin-bottom: 2rem;
+
+h1{
+color:#38bdf8;
 }
-pre {
-    background: #1e293b;
-    padding: 1rem;
-    border-radius: 8px;
-    overflow-x: auto;
-    white-space: pre-wrap;
+
+.panel{
+background:#1e293b;
+padding:15px;
+margin-bottom:20px;
+border-radius:8px;
 }
-.status {
-    padding: 10px;
-    background: #14532d;
-    border-radius: 6px;
-    display: inline-block;
+
+pre{
+white-space:pre-wrap;
+}
+
+.status{
+color:#22c55e;
+font-weight:bold;
 }
 </style>
 
 <meta http-equiv="refresh" content="60">
 
 </head>
+
 <body>
 
-<h1>🚀 MyProject Production Dashboard</h1>
+<h1>🚀 MyProject Automation Dashboard</h1>
 
-<div class="status">
-System: LIVE & AUTOMATED
+<div class="panel">
+<h2>Automation Status</h2>
+<div class="status">ACTIVE</div>
 </div>
 
-<section>
+<div class="panel">
 <h2>Current Version</h2>
 <pre id="version">Loading...</pre>
-</section>
+</div>
 
-<section>
+<div class="panel">
 <h2>Recent Commits</h2>
 <pre id="commits">Loading...</pre>
-</section>
+</div>
 
-<section>
-<h2>Last Push Activity</h2>
-<pre id="pushlog">Loading...</pre>
-</section>
-
-<section>
+<div class="panel">
 <h2>Changelog</h2>
 <pre id="changelog">Loading...</pre>
-</section>
+</div>
 
 <script>
-async function loadData() {
-    try {
-        const version = await fetch('../version.txt').then(r=>r.text());
-        const commits = await fetch('../commits.txt').then(r=>r.text());
-        const pushlog = await fetch('../push.log').then(r=>r.text());
-        const changelog = await fetch('../CHANGELOG.md').then(r=>r.text());
 
-        document.getElementById('version').textContent = version;
-        document.getElementById('commits').textContent = commits;
-        document.getElementById('pushlog').textContent = pushlog;
-        document.getElementById('changelog').textContent = changelog;
+async function loadData(){
 
-    } catch (error) {
-        console.error("Error loading dashboard data:", error);
-    }
+try{
+
+const version =
+await fetch('version.txt').then(r=>r.text());
+
+const commits =
+await fetch('commits.txt').then(r=>r.text());
+
+const changelog =
+await fetch('CHANGELOG.md').then(r=>r.text());
+
+document.getElementById('version').textContent = version;
+document.getElementById('commits').textContent = commits;
+document.getElementById('changelog').textContent = changelog;
+
+}
+catch(e){
+console.error("Dashboard load error:",e);
+}
+
 }
 
 loadData();
+
 </script>
 
 </body>
