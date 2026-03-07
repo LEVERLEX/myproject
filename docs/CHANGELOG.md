@@ -14,3 +14,6 @@
 
 ## v0.1.6 - Fri Mar  6 23:34:53 WAT 2026
 - chore: miscellaneous changes
+
+## v0.1.7 - Sat Mar  7 13:52:50 WAT 2026
+- scripts: automation update
