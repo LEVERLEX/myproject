@@ -1,79 +1,171 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
 
-PROJECT_DIR="$HOME/myproject"
-cd "$PROJECT_DIR" || exit
+#############################################
+# EXTREME PRODUCTION AUTOPUSH SYSTEM
+#############################################
 
-LOCKFILE=".autopush.lock"
-LOGFILE="$PROJECT_DIR/push.log"
+PROJECT_DIR=~/myproject
+LOGFILE=$PROJECT_DIR/autopush.log
+LOCKFILE=$PROJECT_DIR/autopush.lock
+VERSION_FILE=$PROJECT_DIR/VERSION
+COMMITS_FILE=$PROJECT_DIR/COMMITS.md
 
-# Prevent multiple instances
+cd $PROJECT_DIR || exit 1
+
+#############################################
+# COLORS
+#############################################
+
+GREEN="\033[32m"
+RED="\033[31m"
+YELLOW="\033[33m"
+BLUE="\033[34m"
+RESET="\033[0m"
+
+#############################################
+# LOCK SYSTEM (prevents double execution)
+#############################################
+
 if [ -f "$LOCKFILE" ]; then
-    echo "⚠ Autopush already running, skipping..." >> "$LOGFILE"
-    exit 0
+    echo -e "${RED}⚠ Autopush already running${RESET}"
+    exit 1
 fi
 
-touch "$LOCKFILE"
-trap "rm -f $LOCKFILE" EXIT
+touch $LOCKFILE
 
-echo "-----------------------------" >> "$LOGFILE"
-echo "AUTOPUSH RUN $(date)" >> "$LOGFILE"
+#############################################
+# DASHBOARD HEADER
+#############################################
 
-# Remove stale git lock
-if [ -f ".git/index.lock" ]; then
-    echo "Removing stale git lock" >> "$LOGFILE"
-    rm -f .git/index.lock
+echo ""
+echo "-------------------------------------"
+echo -e "${BLUE}AUTOPUSH PRODUCTION ENGINE${RESET}"
+date
+echo "-------------------------------------"
+
+echo "Running diagnostics..."
+
+#############################################
+# VERIFY GIT REPOSITORY
+#############################################
+
+git rev-parse --is-inside-work-tree > /dev/null 2>&1
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Not a git repository${RESET}"
+    rm -f $LOCKFILE
+    exit 1
 fi
 
-# Detect local changes
-if [ -n "$(git status --porcelain)" ]; then
+#############################################
+# FETCH REMOTE STATE
+#############################################
+
+echo "Syncing with remote..."
+git fetch origin
+
+#############################################
+# DETECT CHANGES
+#############################################
+
+CHANGES=$(git status --porcelain)
+
+if [ -z "$CHANGES" ]; then
+    echo -e "${YELLOW}No changes detected${RESET}"
+else
+
+    echo -e "${GREEN}Changes detected${RESET}"
+
+    #############################################
+    # STAGE FILES
+    #############################################
 
     git add .
 
-    if git diff --cached --name-only | grep -qE '\.(md|txt)$'; then
-        COMMIT_MSG="docs: documentation update"
-    elif git diff --cached --name-only | grep -qE '\.html$'; then
-        COMMIT_MSG="ui: dashboard update"
-    elif git diff --cached --name-only | grep -qE '\.sh$'; then
-        COMMIT_MSG="scripts: automation update"
-    else
-        COMMIT_MSG="chore: miscellaneous changes"
-    fi
+    #############################################
+    # AUTO COMMIT
+    #############################################
 
-    echo "Committing: $COMMIT_MSG" >> "$LOGFILE"
-    git commit -m "$COMMIT_MSG"
+    MESSAGE="auto: system update $(date '+%Y-%m-%d %H:%M:%S')"
 
-    # Version bump
-    if [ ! -f docs/version.txt ]; then
-        echo "v0.1.0" > docs/version.txt
-    fi
-
-    CURRENT=$(cat docs/version.txt)
-    BASE=${CURRENT%.*}
-    PATCH=${CURRENT##*.}
-    PATCH=$((PATCH+1))
-    NEW_VERSION="$BASE.$PATCH"
-
-    echo "$NEW_VERSION" > docs/version.txt
-    git add docs/version.txt
-    git commit -m "chore: bump version to $NEW_VERSION"
-
-    # Update commit log
-    git log -n 10 --pretty=format:"%h - %s (%cd)" --date=short > docs/commits.txt
-    git add docs/commits.txt
-    git commit -m "chore: update commits log"
+    git commit -m "$MESSAGE"
 
 fi
 
-# Sync with remote
-echo "Syncing with remote..." >> "$LOGFILE"
-git pull --rebase origin main >> "$LOGFILE" 2>&1
+#############################################
+# VERSION BUMP SYSTEM
+#############################################
 
-# Retry push up to 3 times
-for i in 1 2 3
-do
-    git push origin main >> "$LOGFILE" 2>&1 && break
-    echo "Push failed, retry $i..." >> "$LOGFILE"
-    sleep 5
-done
+if [ -f "$VERSION_FILE" ]; then
 
-echo "Autopush cycle complete $(date)" >> "$LOGFILE"
+    CURRENT=$(cat $VERSION_FILE)
+
+    IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+    PATCH=$((PATCH+1))
+
+    NEW="$MAJOR.$MINOR.$PATCH"
+
+    echo $NEW > $VERSION_FILE
+
+    git add $VERSION_FILE
+
+    git commit -m "chore: bump version to v$NEW"
+
+    echo -e "${GREEN}Version updated → $NEW${RESET}"
+
+fi
+
+#############################################
+# COMMITS LOG
+#############################################
+
+git log --oneline -10 > $COMMITS_FILE
+git add $COMMITS_FILE
+git commit -m "chore: update commits log" 2>/dev/null
+
+#############################################
+# CHANGELOG UPDATE
+#############################################
+
+echo "Update $(date)" >> CHANGELOG.md
+git add CHANGELOG.md
+git commit -m "docs: update changelog" 2>/dev/null
+
+#############################################
+# PULL SAFE
+#############################################
+
+echo "Pulling latest remote updates..."
+git pull --rebase origin main
+
+#############################################
+# PUSH SYSTEM
+#############################################
+
+echo "Pushing to remote..."
+
+git push origin main
+
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}Push successful${RESET}"
+else
+    echo -e "${RED}Push failed${RESET}"
+fi
+
+#############################################
+# LOGGING
+#############################################
+
+echo "AUTOPUSH RUN $(date)" >> $LOGFILE
+git status >> $LOGFILE
+
+#############################################
+# CLEANUP
+#############################################
+
+rm -f $LOCKFILE
+
+echo ""
+echo -e "${GREEN}Automation cycle complete${RESET}"
+echo "-------------------------------------"
