@@ -67,3 +67,9 @@
 - release: v1.0.15
 - docs: update changelog
 - docs: update commit log
+## Update 2026-03-08 19:54:43
+- docs: update commit log
+- Update instructions.md
+- release: v1.0.16
+- docs: update changelog
+- docs: update commit log
