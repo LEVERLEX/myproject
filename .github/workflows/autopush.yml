@@ -1,81 +1,112 @@
-name: AutoPush
+name: Leverlex Autopush Pipeline
 
 on:
   push:
     branches:
       - main
   schedule:
-    - cron: '0 23 * * *'  # Runs every day at 23:00 UTC
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: autopush-main
+  cancel-in-progress: true
 
 jobs:
+
   autopush:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Full history needed for git log and tags
 
-      # Setup Git user
-      - name: Set up Git
-        run: |
-          git config --global user.name "LEVERLEX"
-          git config --global user.email "cleverlexdigitals@gmail.com"
+    # Checkout repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      # Fetch all tags
-      - name: Fetch all tags
-        run: git fetch --tags
+    # Configure Git identity
+    - name: Configure Git
+      run: |
+        git config user.name "Leverlex Automation"
+        git config user.email "cleverlexdigitals@gmail.com"
 
-      # Detect changes and update logs/changelog
-      - name: Update commits log and changelog
-        run: |
-          COMMITS_FILE="COMMITS.md"
-          CHANGELOG_FILE="CHANGELOG.md"
-          LOG_ENTRIES=$(git status --porcelain)
-          
-          if [ -n "$LOG_ENTRIES" ]; then
-            echo "Changes detected"
-            git add .
-            git commit -m "auto: system update $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-          else
-            echo "No changes detected"
-          fi
+    # Fetch tags
+    - name: Fetch tags
+      run: git fetch --tags --force
 
-          # Update commits log
-          git log --oneline -10 > $COMMITS_FILE
-          git add $COMMITS_FILE
-          git commit -m "chore: update commits log" || echo "No changes to commit"
+    # Detect repository changes
+    - name: Detect changes
+      id: changes
+      run: |
+        if [[ -n "$(git status --porcelain)" ]]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
 
-          # Update changelog
-          echo "Update $(date '+%Y-%m-%d %H:%M:%S')" >> $CHANGELOG_FILE
-          git add $CHANGELOG_FILE
-          git commit -m "docs: update changelog" || echo "No changes to commit"
+    # Generate commit history log
+    - name: Update commit log
+      run: |
+        git log --pretty=format:"%h - %s (%ci)" -20 > COMMITS.md
+        git add COMMITS.md
+        git commit -m "docs: update commit log" || true
 
-      # Auto-increment version
-      - name: Auto-increment version
-        run: |
-          VERSION_FILE="VERSION"
-          if [ ! -f "$VERSION_FILE" ]; then
-            echo "1.0.0" > $VERSION_FILE
-          fi
-          CURRENT=$(cat $VERSION_FILE)
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-          PATCH=$((PATCH + 1))
-          NEW="$MAJOR.$MINOR.$PATCH"
-          echo "$NEW" > $VERSION_FILE
-          git add $VERSION_FILE
-          git commit -m "Release v$NEW" || echo "No changes to commit"
+    # Update changelog using real commit data
+    - name: Update changelog
+      run: |
+        DATE=$(date "+%Y-%m-%d %H:%M:%S")
 
-          # Tag the release
-          git tag "v$NEW" || echo "Tag exists"
+        echo "" >> CHANGELOG.md
+        echo "## Update $DATE" >> CHANGELOG.md
+        git log -5 --pretty=format:"- %s" >> CHANGELOG.md
 
-      # Push changes to main branch
-      - name: Push changes
-        run: |
-          git push origin main --tags || echo "Push failed"
+        git add CHANGELOG.md
+        git commit -m "docs: update changelog" || true
 
-      # Log final status
-      - name: Display final status
-        run: git status
+    # Semantic version bump
+    - name: Increment version
+      run: |
+
+        VERSION_FILE="VERSION"
+
+        if [ ! -f "$VERSION_FILE" ]; then
+          echo "1.0.0" > $VERSION_FILE
+        fi
+
+        CURRENT=$(cat $VERSION_FILE)
+
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+        PATCH=$((PATCH+1))
+
+        NEW="$MAJOR.$MINOR.$PATCH"
+
+        echo "$NEW" > $VERSION_FILE
+
+        git add VERSION
+        git commit -m "release: v$NEW" || true
+
+        git tag -a "v$NEW" -m "Release v$NEW" || true
+
+    # Push changes
+    - name: Push updates
+      run: |
+        git push origin main --follow-tags
+
+    # Output repository summary
+    - name: Workflow report
+      run: |
+        echo "Repository Status"
+        git status
+
+        echo ""
+        echo "Latest commit"
+        git log -1
+
+        echo ""
+        echo "Recent commits"
+        git log --oneline -10
