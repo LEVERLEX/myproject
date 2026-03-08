@@ -51,3 +51,9 @@ Update Sat Mar  7 14:30:04 WAT 2026
 - release: v1.0.12
 - docs: update changelog
 - docs: update commit log
+## Update 2026-03-08 19:37:51
+- docs: update commit log
+- Update instructions.md
+- release: v1.0.13
+- docs: update changelog
+- docs: update commit log
