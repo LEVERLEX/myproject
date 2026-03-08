@@ -1,20 +1,50 @@
-5e9956e - Update instructions.md (2026-03-08 20:35:10 +0100)
-63bdae2 - release: v1.0.12 (2026-03-08 10:25:28 +0000)
-5cf1bd1 - docs: update changelog (2026-03-08 10:25:28 +0000)
-e2199aa - docs: update commit log (2026-03-08 10:25:28 +0000)
-5d5bc2a - release: v1.0.11 (2026-03-08 10:24:35 +0000)
-92a3da5 - docs: update changelog (2026-03-08 10:24:35 +0000)
-7cc025c - docs: update commit log (2026-03-08 10:24:35 +0000)
-571ecd8 - release: v1.0.10 (2026-03-08 10:24:01 +0000)
-666fe3c - docs: update changelog (2026-03-08 10:24:01 +0000)
-d6050b2 - docs: update commit log (2026-03-08 10:24:01 +0000)
-4be16a9 - release: v1.0.9 (2026-03-08 10:23:52 +0000)
-e338b97 - docs: update changelog (2026-03-08 10:23:52 +0000)
-9bbd318 - docs: update commit log (2026-03-08 10:23:52 +0000)
-435a9a0 - release: v1.0.8 (2026-03-08 10:23:20 +0000)
-7911b13 - docs: update changelog (2026-03-08 10:23:20 +0000)
-8851355 - docs: update commit log (2026-03-08 10:23:20 +0000)
-defa8fb - release: v1.0.7 (2026-03-08 10:23:07 +0000)
-b546c34 - docs: update changelog (2026-03-08 10:23:07 +0000)
-14be544 - docs: update commit log (2026-03-08 10:23:07 +0000)
-01cc542 - release: v1.0.6 (2026-03-08 10:20:19 +0000)
+LEVERLEX Automation Framework – Structured Response
+Objective ✅
+Establish a production-grade, automation-safe development environment for the LEVERLEX GitHub Pages dashboard.
+Integrate AI-assisted coding tools for active workflow automation:
+Tabnine – AI code completion across IDEs; trained on public/open-source code.
+Codeium – Free multi-language coding assistant.
+Amazon CodeWhisperer – Cloud-integrated coding and deployment hints.
+Replit Ghostwriter – Direct AI-assisted coding within the LEVERLEX GitHub Pages environment.
+Strength: Ideal for generating boilerplate, integration scripts, and consistent coding patterns while maintaining automation alignment.
+Scope
+This configuration will ensure:
+[x] Full workflow automation with:
+GitHub Actions Bots (PRs, merges, automated testing, releases)
+GitLab Auto DevOps pipelines (testing, building, deployment)
+Jenkins AI plugins (error detection, monitoring, automated suggestions)
+n8n / Zapier Bots (cross-platform triggered automation)
+[x] Standardized dashboard.html structure
+[x] Mobile-first responsive layouts
+[x] Markdown integrity
+[x] Automation modules conform to repository conventions
+[x] Workflow files protected from unsafe edits
+Required Actions ✅
+1️⃣ GitHub Actions / Workflow Bots
+Create .github/copilot-instructions.md for automation-aware coding instructions.
+Maintain multi-platform automation triggers for PRs, commits, testing, and releases.
+2️⃣ Repository Rules
+[x] Enforce semantic HTML structure (H1–H10 hierarchy)
+[x] Mobile-first responsive layout
+[x] No inline CSS; use structured stylesheets
+[x] Safe JS fetch patterns with graceful fallbacks
+[x] Preserve automation workflow logic
+[ ] Restrict edits to workflow YAML unless explicitly referenced
+3️⃣ Automation Awareness
+Respect workflow triggers (GitHub Actions, Jenkins, n8n/Zapier)
+Maintain dynamic badge integrity
+Preserve fallback values for API failures
+Retain embedded external resources (Docs, Slides, Maps, Videos)
+Acceptance Criteria ✅
+[x] Multi-agent workflow automation configured and verified
+[x] Repository-specific coding standards documented
+[x] Automation safeguards in place
+[x] Dashboard layout and formatting rules enforced
+[x] All changes reviewed and merged
+Outcome
+The system provides:
+[x] Context-aware AI coding suggestions
+[x] Automation-safe updates for workflows and files
+[x] Consistent, fully responsive dashboard structure
+[x] Reduced manual corrections and maintenance cycles
+✅ Implementation ensures reliability, maintainability, and full automation safety for the LEVERLEX GitHub Pages dashboard.
