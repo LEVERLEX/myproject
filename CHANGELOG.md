@@ -169,3 +169,9 @@
 - release: v1.0.28
 - docs: update changelog
 - docs: update commit log
+## Update 2026-03-16 23:37:35
+- docs: update commit log
+- release: v1.0.29
+- docs: update changelog
+- docs: update commit log
+- Update CHANGELOG.md
