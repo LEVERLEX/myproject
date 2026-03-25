@@ -223,3 +223,9 @@
 - docs: update changelog
 - docs: update commit log
 - release: v1.0.36
+## Update 2026-03-25 23:42:10
+- docs: update commit log
+- release: v1.0.38
+- docs: update changelog
+- docs: update commit log
+- release: v1.0.37
