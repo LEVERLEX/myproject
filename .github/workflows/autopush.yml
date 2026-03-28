@@ -1,112 +1,231 @@
-name: Leverlex Autopush Pipeline
+#!/bin/bash
 
-on:
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: "0 23 * * *"
-  workflow_dispatch:
+#############################################
+# LEVERLEX AUTONOMOUS ENGINE (REAL MODE)
+#############################################
 
-permissions:
-  contents: write
+set -e
+trap 'echo "[ERROR] Line $LINENO | Exit Code $?" >> logs/errors.log' ERR
 
-concurrency:
-  group: autopush-main
-  cancel-in-progress: true
+BASE="$HOME/leverlex"
+LOG="$BASE/logs"
+OUT="$BASE/output"
+PLUG="$BASE/plugins"
+CONF="$BASE/configs"
 
-jobs:
+mkdir -p "$LOG" "$OUT" "$PLUG" "$CONF"
 
-  autopush:
-    runs-on: ubuntu-latest
+echo "[INIT] Leverlex Real Engine Booting..."
 
-    steps:
+#############################################
+# AI GUARD
+#############################################
 
-    # Checkout repository
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+exec 2>>"$LOG/errors.log"
 
-    # Configure Git identity
-    - name: Configure Git
-      run: |
-        git config user.name "Leverlex Automation"
-        git config user.email "cleverlexdigitals@gmail.com"
+#############################################
+# DEPENDENCY MANAGER (REAL TOOLS)
+#############################################
 
-    # Fetch tags
-    - name: Fetch tags
-      run: git fetch --tags --force
+install_tools() {
+    echo "[TOOLS] Checking dependencies..."
 
-    # Detect repository changes
-    - name: Detect changes
-      id: changes
-      run: |
-        if [[ -n "$(git status --porcelain)" ]]; then
-          echo "changed=true" >> $GITHUB_OUTPUT
-        else
-          echo "changed=false" >> $GITHUB_OUTPUT
-        fi
+    command -v git >/dev/null || pkg install git -y
+    command -v node >/dev/null || pkg install nodejs -y
+    command -v python >/dev/null || pkg install python -y
+    command -v pip >/dev/null || pkg install python-pip -y
 
-    # Generate commit history log
-    - name: Update commit log
-      run: |
-        git log --pretty=format:"%h - %s (%ci)" -20 > COMMITS.md
-        git add COMMITS.md
-        git commit -m "docs: update commit log" || true
+    echo "[TOOLS] All required tools installed"
+}
 
-    # Update changelog using real commit data
-    - name: Update changelog
-      run: |
-        DATE=$(date "+%Y-%m-%d %H:%M:%S")
+#############################################
+# REAL SYSTEM MONITOR
+#############################################
 
-        echo "" >> CHANGELOG.md
-        echo "## Update $DATE" >> CHANGELOG.md
-        git log -5 --pretty=format:"- %s" >> CHANGELOG.md
+system_monitor() {
+    echo "[MONITOR] Capturing real system stats..."
 
-        git add CHANGELOG.md
-        git commit -m "docs: update changelog" || true
+    top -b -n 1 | head -15 >> "$LOG/system.log"
+    df -h >> "$LOG/system.log"
+    free -m >> "$LOG/system.log" 2>/dev/null || true
+}
 
-    # Semantic version bump
-    - name: Increment version
-      run: |
+#############################################
+# CHANGE DETECTOR
+#############################################
 
-        VERSION_FILE="VERSION"
+detect_changes() {
+    git status --porcelain 2>/dev/null | grep . && echo "changed" || echo "nochange"
+}
 
-        if [ ! -f "$VERSION_FILE" ]; then
-          echo "1.0.0" > $VERSION_FILE
-        fi
+#############################################
+# VERSION ENGINE
+#############################################
 
-        CURRENT=$(cat $VERSION_FILE)
+versioning() {
+    FILE="$BASE/VERSION"
+    [ ! -f "$FILE" ] && echo "1.0.0" > "$FILE"
 
-        IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+    IFS='.' read -r a b c <<< "$(cat $FILE)"
+    c=$((c+1))
+    echo "$a.$b.$c" > "$FILE"
 
-        PATCH=$((PATCH+1))
+    git add VERSION 2>/dev/null || true
+    git commit -m "auto: version bump" 2>/dev/null || true
+}
 
-        NEW="$MAJOR.$MINOR.$PATCH"
+#############################################
+# CHANGELOG
+#############################################
 
-        echo "$NEW" > $VERSION_FILE
+changelog() {
+    FILE="$BASE/CHANGELOG.md"
 
-        git add VERSION
-        git commit -m "release: v$NEW" || true
+    echo "" >> "$FILE"
+    echo "## $(date)" >> "$FILE"
+    git log -5 --pretty=format:"- %s" >> "$FILE" 2>/dev/null || echo "- init" >> "$FILE"
 
-        git tag -a "v$NEW" -m "Release v$NEW" || true
+    git add CHANGELOG.md 2>/dev/null || true
+    git commit -m "auto: changelog update" 2>/dev/null || true
+}
 
-    # Push changes
-    - name: Push updates
-      run: |
-        git push origin main --follow-tags
+#############################################
+# REAL BUILD SYSTEM
+#############################################
 
-    # Output repository summary
-    - name: Workflow report
-      run: |
-        echo "Repository Status"
-        git status
+build_system() {
+    echo "[BUILD] Running real builds..."
 
-        echo ""
-        echo "Latest commit"
-        git log -1
+    if [ -f package.json ]; then
+        npm install
+        npm run build || true
+    fi
 
-        echo ""
-        echo "Recent commits"
-        git log --oneline -10
+    if [ -f requirements.txt ]; then
+        pip install -r requirements.txt
+    fi
+
+    if [ -f Makefile ]; then
+        make || true
+    fi
+}
+
+#############################################
+# AUTO PROJECT GENERATOR
+#############################################
+
+generate_project() {
+    NAME="app_$(date +%s)"
+    DIR="$OUT/$NAME"
+
+    mkdir -p "$DIR"
+
+    echo "<h1>Live Generated App</h1>" > "$DIR/index.html"
+
+    echo "[GENERATOR] Project created: $NAME"
+}
+
+#############################################
+# REAL API LAUNCHER
+#############################################
+
+run_api() {
+    echo "[API] Launching real API..."
+
+    cat <<EOF > "$OUT/server.py"
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+class H(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'Leverlex Live API')
+
+HTTPServer(('0.0.0.0', 8080), H).serve_forever()
+EOF
+
+    python "$OUT/server.py" &
+}
+
+#############################################
+# REAL DEPLOYMENT ENGINE
+#############################################
+
+deploy() {
+    echo "[DEPLOY] Executing real deployment..."
+
+    git add . 2>/dev/null || true
+    git commit -m "auto: deploy sync" 2>/dev/null || true
+    git push origin main 2>/dev/null || echo "[WARN] Git push skipped"
+
+}
+
+#############################################
+# PLUGIN SYSTEM
+#############################################
+
+run_plugins() {
+    for p in "$PLUG"/*; do
+        [ -f "$p/run.sh" ] && bash "$p/run.sh"
+    done
+}
+
+#############################################
+# SELF HEALING
+#############################################
+
+self_heal() {
+    if [ $? -ne 0 ]; then
+        echo "[HEAL] Resetting repo..."
+        git reset --hard 2>/dev/null || true
+        git clean -fd 2>/dev/null || true
+    fi
+}
+
+#############################################
+# AUTO ALIGNMENT (REAL)
+#############################################
+
+auto_align() {
+    echo "[ALIGN] Optimizing..."
+
+    find "$BASE" -type f -name "*.log" -size +2M -delete
+}
+
+#############################################
+# CORE ENGINE
+#############################################
+
+engine() {
+
+    echo "[ENGINE] Cycle start"
+
+    install_tools
+    system_monitor
+
+    STATE=$(detect_changes)
+
+    if [ "$STATE" = "changed" ]; then
+        versioning
+        changelog
+        build_system
+        generate_project
+        run_api
+    fi
+
+    run_plugins
+    deploy
+    auto_align
+    self_heal
+
+    echo "[ENGINE] Cycle complete"
+}
+
+#############################################
+# CONTINUOUS EXECUTION
+#############################################
+
+while true; do
+    engine
+    sleep 15
+done
